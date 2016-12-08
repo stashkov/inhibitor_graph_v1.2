@@ -23,33 +23,22 @@ def generate_adj_matrix(vertices, inhibition_degree=2):
     return matrix
 
 
-def swap_true_and_false(nodes):
+def swap_true_false(nodes):
     if isinstance(nodes, list):
         return [n.replace('F', 'Z').replace('T', 'F').replace('Z', 'T') for n in nodes]
     if isinstance(nodes, str):
-        return nodes.replace('F', 'Z').replace('T', 'F').replace('Z', 'T')
-
-
-def incompatible_nodes(node):
-    return [swap_true_and_false(node)]
+        return [nodes.replace('F', 'Z').replace('T', 'F').replace('Z', 'T')]
 
 
 def nodes_incompatible_with_dict(node, d):
-    res = set()
-    inc_nodes_list = list(set(incompatible_nodes(node) + swap_true_and_false(d[node])))  # generate incompatible nodes
-    existing_nodes_list = d.keys()
-    for i in inc_nodes_list:  # TODO can be re-written using set notation
-        for e in existing_nodes_list:
-            if i == e:
-                res.add(e)
-    return list(res)
+    inc_nodes_list = list(set(swap_true_false(node) + swap_true_false(d[node])))
+    return [i for i in inc_nodes_list if i in d.keys()]
 
 
-def get_nodes_incompatible_inside_dict(d):
+def nodes_incompatible_within_dict(d):
     """dict {'5T': '6F', '5F': '6T'} is incompatible with itself"""
-    lst = d.keys()
     res = set()
-    for n in lst:
+    for n in d.keys():
         res.update(nodes_incompatible_with_dict(n, d))
     return list(res)
 
@@ -64,7 +53,7 @@ def convert_undirected_to_directed(graph, helper):
     return graph
 
 
-def get_number_of_nodes(d):
+def number_of_nodes(d):
     return len({i[:-1] for i in d.keys()})
 
 

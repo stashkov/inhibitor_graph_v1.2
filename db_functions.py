@@ -12,21 +12,35 @@ else:
 
 
 def insert_into(row_id,
-                number_of_nodes=None,
-                input_graph=None,
-                input_matrix=None,
-                inhibited_edges=None,
-                in_degree=None,
-                out_degree=None,
-                inhibition_degree=None,
-                inhibited_vertices=None,
-                non_inhibited_vertices=None,
+                graph_instance=None,
                 known_incompatible_nodes=None,
                 bin_of_edges=None,
                 number_of_not_feasible=None,
                 results=None,
                 number_of_results=None,
                 running_time=None):
+
+    if graph_instance:
+        number_of_nodes = graph_instance.number_of_nodes
+        input_graph = graph_instance.dict_graph
+        input_matrix = graph_instance.matrix_graph
+        in_degree = graph_instance.in_degree
+        out_degree = graph_instance.out_degree
+        inhibited_edges = graph_instance.inhibited_edges
+        inhibition_degree = graph_instance.inhibition_degree
+        inhibited_vertices = graph_instance.inhibited_vertices
+        non_inhibited_vertices = graph_instance.non_inhibited_vertices
+    else:
+        number_of_nodes = None
+        input_graph = None
+        input_matrix = None
+        in_degree = None
+        out_degree = None
+        inhibited_edges = None
+        inhibition_degree = None
+        inhibited_vertices = None
+        non_inhibited_vertices = None
+
     conn = connect_to_db()
     c = conn.cursor()
 

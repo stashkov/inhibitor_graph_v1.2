@@ -8,7 +8,7 @@ from multiprocessing import Process, Manager, cpu_count
 import threading, Queue
 import example_graphs as ex
 import db_functions as dbfunc
-# import draw_graph as dg
+import draw_graph as dg
 import graph as g
 import bin_of_edges as b
 
@@ -34,12 +34,12 @@ def recursive_teardown(node, dict_graph, node_count, result, not_feasible_dicts,
     if dict_graph in not_feasible_dicts[len(dict_graph)]:
         logger.debug('this dict is incompatible because it was in inc list')
         return
-    if node_count > op.get_number_of_nodes(dict_graph):
+    if node_count > op.number_of_nodes(dict_graph):
         logger.debug('this dict is incompatible because original node count %i > current node count %i' % (
-            node_count, op.get_number_of_nodes(dict_graph)))
+            node_count, op.number_of_nodes(dict_graph)))
         not_feasible_dicts = add_to_list_of_not_feasible_dicts(dict_graph, not_feasible_dicts)
         return
-    nodes_inside = op.get_nodes_incompatible_inside_dict(dict_graph)
+    nodes_inside = op.nodes_incompatible_within_dict(dict_graph)
     logger.debug('incompatible nodes inside dict: %s' % nodes_inside)
     if nodes_inside:  # check if dbfunc is incompatible with itself
         for i in nodes_inside:
@@ -86,7 +86,7 @@ def process_sequentially(b, node_count):
     for i in b.keys():
         temp_ = copy.deepcopy(b)
         logger.info('Next iteration. Working with node %s, which is #%s out of %s' % (i, b.keys().index(i) + 1, len(b.keys())))
-        recursive_teardown(i, temp_, node_count, result, shared_not_feasible_dicts, known_incompatible_nodes)
+        recursive_teardown(i, temp_, node_count, shared_results, shared_not_feasible_dicts, known_incompatible_nodes)
 
     logger.info('We got %s infeasible dicts' % sum([len(i) for i in shared_not_feasible_dicts]))
     logger.info('results are:\n%s' % shared_results)
@@ -155,43 +155,32 @@ def generate_connected_graph(number_of_nodes):
 
 
 if __name__ == '__main__':
-    for i in range(5):
-        dbfunc.create_database()
-        row_id = dbfunc.get_max_id() + 1
-        start = time.time()
+    # for i in range(5):
+    dbfunc.create_database()
+    row_id = dbfunc.get_max_id() + 1
+    start = time.time()
 
-        number_of_nodes = 15 + i * 5
+    number_of_nodes = 7
 
-        graph_instance = generate_connected_graph(number_of_nodes)
-        #ggg = ex.graph_6_nodes; graph_instance = g.Graph(ggg); number_of_nodes = len(ggg)
+    graph_instance = generate_connected_graph(number_of_nodes)
+    # ggg = ex.graph_I; graph_instance = g.Graph(ggg); number_of_nodes = len(ggg)
 
-        bin_of_edges = b.generate_bin_of_edges(graph_instance)
-        bin_of_edges = op.convert_directed_to_undirected(bin_of_edges)  # experimental
-        known_incompatible_nodes = get_known_incompatible(bin_of_edges)
+    bin_of_edges = b.generate_bin_of_edges(graph_instance)
+    # bin_of_edges = op.convert_directed_to_undirected(bin_of_edges)  # experimental
+    known_incompatible_nodes = get_known_incompatible(bin_of_edges)
 
-        result = process_parallel(bin_of_edges, number_of_nodes)
-        # result = process_sequentially(bin_of_edges, number_of_nodes)
+    # result = process_parallel(bin_of_edges, number_of_nodes)
+    result = process_sequentially(bin_of_edges, number_of_nodes)
 
-        duration = str(time.time() - start)
-        logger.info('Execution time: %s' % duration)
+    duration = str(time.time() - start)
+    logger.info('Execution time: %s' % duration)
 
-        dbfunc.insert_into(row_id=row_id,
-                           bin_of_edges=bin_of_edges,
+    dbfunc.insert_into(row_id=row_id,
+                       graph_instance=graph_instance,
+                       bin_of_edges=bin_of_edges,
+                       running_time=duration,
+                       known_incompatible_nodes=known_incompatible_nodes)
 
-                           running_time=duration,
-                           known_incompatible_nodes=known_incompatible_nodes,
-
-                           number_of_nodes=graph_instance.number_of_nodes,
-                           input_graph=graph_instance.dict_graph,
-                           input_matrix=graph_instance.matrix_graph,
-                           in_degree=graph_instance.in_degree,
-                           out_degree=graph_instance.out_degree,
-                           inhibited_edges=graph_instance.inhibited_edges,
-                           inhibition_degree=graph_instance.inhibition_degree,
-                           inhibited_vertices=graph_instance.inhibited_vertices,
-                           non_inhibited_vertices=graph_instance.non_inhibited_vertices)
-
-    # dg.draw_input_graph(row_id)
-    # dg.draw_result_graph(row_id)
-
+    dg.draw_input_graph(row_id)
+    dg.draw_result_graph(row_id)
 
