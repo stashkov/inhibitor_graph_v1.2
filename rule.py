@@ -20,10 +20,9 @@ def more_than_one_one_inhibited(graph_dict, u, v, bin_of_edges):
     bin_of_edges[u + 'T'].add(v + 'T')  # CASE II.1
     bin_of_edges[u + 'F'].add(v + 'F')  # CASE II.4
     for key, value in graph_dict.items():
-        if v in value:  # find nodes, other than u, going to v
-            if key != u:
-                bin_of_edges[key + 'F'].add(v + 'T')  # CASE II.1
-                bin_of_edges[key + 'T'].add(v + 'F')  # CASE II.4
+        if key != u and v in value:  # find nodes, other than u, going to v
+            bin_of_edges[key + 'F'].add(v + 'T')  # CASE II.1
+            bin_of_edges[key + 'T'].add(v + 'F')  # CASE II.4
     return bin_of_edges
 
 

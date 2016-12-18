@@ -31,7 +31,7 @@ def draw_graph(adjacency_matrix, vertices='', name='img_1'):
             node_color=node_color)
     # plt.show()
     name = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'images/') + str(name) + '.png'
-    plt.savefig(name, figsize=(20, 20), dpi=1200)
+    plt.savefig(name, figsize=(20, 20), dpi=100)
     plt.clf()
     return
 

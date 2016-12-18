@@ -4,7 +4,7 @@ import copy
 import itertools
 import logging
 import time
-from multiprocessing import Process, Manager, cpu_count
+# from multiprocessing import Process, Manager, cpu_count
 import threading, Queue
 import example_graphs as ex
 import db_functions as dbfunc
@@ -14,7 +14,7 @@ import bin_of_edges as b
 
 
 
-NUMBER_OF_ALLOWED_PROCESSES = cpu_count() - 1
+# NUMBER_OF_ALLOWED_PROCESSES = cpu_count() - 1
 logger = logging.getLogger(__name__)
 #logging.basicConfig(level=logging.INFO, filename='hello.log')
 logging.basicConfig(level=logging.INFO)
@@ -80,13 +80,20 @@ def remove_incompatible_nodes(d, incompatible_nodes):
 
 
 def process_sequentially(b, node_count):
-    shared_results, shared_not_feasible_dicts = set_up_shared_variables(len(b))
+    shared_results, shared_not_feasible_dicts = [], []
+    for i in range(len(b)):  # empty list of lists to hold corresponding length incompatible dictionaries
+        shared_not_feasible_dicts.append([])
+
     global known_incompatible_nodes
 
     for i in b.keys():
         temp_ = copy.deepcopy(b)
+        t1 = time.time()
         logger.info('Next iteration. Working with node %s, which is #%s out of %s' % (i, b.keys().index(i) + 1, len(b.keys())))
-        recursive_teardown(i, temp_, node_count, shared_results, shared_not_feasible_dicts, known_incompatible_nodes)
+        logger.info('Out degree of this node is %s' % len(b[i]))
+        if len(b[i]) == max([len(b[i]) for i in b.keys()]): # TODO remove this line
+            recursive_teardown(i, temp_, node_count, shared_results, shared_not_feasible_dicts, known_incompatible_nodes)
+        logger.info('Time spent on this node %s\n' % str(time.time() - t1))
 
     logger.info('We got %s infeasible dicts' % sum([len(i) for i in shared_not_feasible_dicts]))
     logger.info('results are:\n%s' % shared_results)
@@ -160,10 +167,10 @@ if __name__ == '__main__':
     row_id = dbfunc.get_max_id() + 1
     start = time.time()
 
-    number_of_nodes = 7
+    number_of_nodes = 15
 
-    graph_instance = generate_connected_graph(number_of_nodes)
-    # ggg = ex.graph_I; graph_instance = g.Graph(ggg); number_of_nodes = len(ggg)
+    # graph_instance = generate_connected_graph(number_of_nodes)
+    ggg = ex.graph_II; graph_instance = g.Graph(ggg); number_of_nodes = len(ggg)
 
     bin_of_edges = b.generate_bin_of_edges(graph_instance)
     # bin_of_edges = op.convert_directed_to_undirected(bin_of_edges)  # experimental
@@ -174,6 +181,7 @@ if __name__ == '__main__':
 
     duration = str(time.time() - start)
     logger.info('Execution time: %s' % duration)
+    logger.info('id of the graph in database %s' % row_id)
 
     dbfunc.insert_into(row_id=row_id,
                        graph_instance=graph_instance,
